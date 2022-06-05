@@ -24,7 +24,8 @@
               "128": "Images/128.png" },
 
   "action": {
-    "default_title": "Comcy - Ebay Profit Finder"
+    "default_title": "Comcy - Ebay Profit Finder",
+    "default_popup": "html/popup.html"
   },
   "web_accessible_resources": [
     {

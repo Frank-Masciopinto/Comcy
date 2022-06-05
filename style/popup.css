@@ -1,0 +1,45 @@
+body { 
+  height: 400px;
+  width: 300px;
+  font-weight: normal !important;
+  font-family: Roboto !important;
+  font-size: small !important;
+  letter-spacing: 0 !important;
+  background-color: #282828;
+  border: 3px solid gold;
+}
+.space-evenly-flex {
+  padding-top: 5px;
+  display: flex;
+  font-size: small;
+  justify-content: space-evenly;
+}
+
+.justify-center {
+  display: flex;
+  justify-content: center;
+}
+div.right {
+  float: right;
+  text-align: -webkit-right;
+  vertical-align: middle;
+  width: 46%;
+  margin-right: 50px;
+}
+div.left {
+  float: left;
+  text-align: -webkit-left;
+  vertical-align: middle;
+  width: 75%;
+  margin-left: 21px;
+}
+
+#profit-margin-input {
+  color: gold;
+}
+input#profit-margin-input:focus {
+  border-color: gold !important;
+}
+.logo {
+  width: 50%;
+}
