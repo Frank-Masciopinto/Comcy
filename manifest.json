@@ -1,0 +1,35 @@
+{
+  "name": "Comcy",
+  "version": "1.00",
+  "description": "Compare Collectibles from COMC to EBAY, and find only profitable ones",
+  "manifest_version": 3,
+  "content_scripts": [{
+    "matches": [ "https://www.comc.com/*" ],
+    "js": [ "script/content.js" ],
+    "all_frames": true
+}],
+  "background":
+    {
+      "service_worker": "background.js"
+    },
+    "permissions": [
+      "activeTab", "notifications", "storage", "scripting"],
+   
+   "host_permissions": [
+     "http://*/*",
+     "*://*/*"
+   ],
+
+  "icons" : { "42": "Images/42.png",
+              "128": "Images/128.png" },
+
+  "action": {
+    "default_title": "Comcy - Ebay Profit Finder"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["*.js"],
+      "matches": ["https://*/*", "http://*/*"]
+    }
+  ]
+}
