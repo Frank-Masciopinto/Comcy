@@ -27,6 +27,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
 chrome.runtime.onInstalled.addListener(async (details) => {
     if(details.reason == "install"){
-        console.log("ONINSTALL STORAGE SET UP")
+        console.log("ONINSsTALL STORAGE SET UP")
 
 }});
