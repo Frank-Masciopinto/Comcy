@@ -1,11 +1,12 @@
 {
-  "name": "Comcy",
+  "name": "Card Arbitrage",
   "version": "1.00",
   "description": "Compare Collectibles from COMC to EBAY, and find only profitable ones",
   "manifest_version": 3,
   "content_scripts": [{
     "matches": [ "https://www.comc.com/*" ],
     "js": [ "script/content.js" ],
+    "css": ["style/content.css"],
     "all_frames": true
 }],
   "background":
@@ -24,7 +25,7 @@
               "128": "Images/128.png" },
 
   "action": {
-    "default_title": "Comcy - Ebay Profit Finder",
+    "default_title": "Card Arbitrage - Ebay Profit Finder",
     "default_popup": "html/popup.html"
   },
   "web_accessible_resources": [

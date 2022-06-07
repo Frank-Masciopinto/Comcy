@@ -8,19 +8,15 @@ const LS = {
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     console.log(request)
-    if (request.method === 'captured') {
+    if (request.message == 'create_notification') {
         chrome.notifications.create({
             type: 'basic',
             iconUrl: 'Images/128.png',
-            title: `Huyp`,
-            message: 'Looking for similar products...',
+            title: request.title,
+            message: request.description,
             priority: 1
         })
-        capture(request).then(a => save(a, sender.tab)).catch(e => {
-        console.warn(e);
-        notify(e.message || e);
         sendResponse({mess: "DONE"})
-        });
     }
 })
 
