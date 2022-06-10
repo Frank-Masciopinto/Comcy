@@ -1,7 +1,22 @@
 .green-profit {
     color: green;
+    font-weight: 700;
+    font-size: medium;
 }
 
 .red-loss {
     color: red;
+    font-weight: 700;
+    font-size: medium;
+}
+.Not-Found-On-Ebay {
+    border-top: 2px solid gray;
+    color: black;
+    font-weight: 700;
+    font-size: medium;
+}
+.ebay-price {
+    border-top: 2px solid gray;
+    font-size: initial;
+    font-weight: 700;
 }

@@ -4,7 +4,7 @@
   "description": "Compare Collectibles from COMC to EBAY, and find only profitable ones",
   "manifest_version": 3,
   "content_scripts": [{
-    "matches": [ "https://www.comc.com/*" ],
+    "matches": [ "https://www.comc.com/*", "https://api.ebay.com/*" ],
     "js": [ "script/content.js" ],
     "css": ["style/content.css"],
     "all_frames": true

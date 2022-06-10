@@ -18,14 +18,40 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
 
 let all_Cards_Array = []
 let all_Cards_Containers;
-let ebay_secret_Auth = "v^1.1#i^1#p^3#I^3#f^0#r^0#t^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"
+let ebay_secret_Auth;
+console.log("Window_Name = " + window.name)
+let ebay_API_token_login = "https://api.ebay.com/identity/v1/oauth2/token"
+let app_credentials = btoa("Francesc-Comcy-PRD-3b4446ab8-52a76f32:PRD-b4446ab8399b-f991-4154-ae42-1e34")
+
 //Test If Browsing a Collection - Then Collect all cards info & look for Profits on Ebay
 if (document.getElementById("cardexplorer")) {
   get_All_Cards_Info()
 }
 else if (window.name == "add_to_cart") {
+  console.log("Adding to Cart...")
   //Add to cart then close window
   add_to_cart()
+}
+else if (window.name == "get_token") {
+  update_token()
+}
+
+async function update_token() {
+  console.log("update_token()")
+  var url_string = window.location.href
+  var url = new URL(url_string);
+  var is_auth_success = url.searchParams.get("isAuthSuccessful");
+  if (is_auth_success == "true") {
+    alert(url.searchParams.get("code"))
+    var new_token = url.searchParams.get("code");
+    notify("Cards Arbitrage - Got a New Token", "You can resume your work now.")
+    await LS.setItem("ebay_auth_token", new_token)
+    window.close()
+  }
+  else {
+    alert("is_auth_success= FALSE")
+    window.close()
+  }
 }
 
 function notify(title, description) {
@@ -47,12 +73,17 @@ async function get_All_Cards_Info() {
     card_Info.href = all_Cards_Containers[i].querySelector("a").href
     all_Cards_Array.push(card_Info)
     card_Info = await fetch_ebay_price(card_Info)
-    card_Info.PL = card_Info.ebay_Price - parseFloat(card_Info.list_Price.replace("$", ""))
-    await add_Ebay_Price_PL_in_Comc(card_Info)
-    //If Ebay Price is above the margin value set by user -> open product page and add to cart
-    if (card_Info.PL >= await LS.getItem("margin_Value_State")) {
-      notify("Comcy - Adding to Cart Profitable Card", `$$$ ${card_Info.title} $$$`)
-      await open_card_page_wait_added_to_cart(card_Info)
+    if (card_Info.items_found_on_ebay) {
+      card_Info.PL = card_Info.ebay_Price - parseFloat(card_Info.list_Price.replace("$", ""))
+      await add_Ebay_Price_PL_in_Comc(card_Info)
+      //If Ebay Price is above the margin value set by user -> open product page and add to cart
+      if (card_Info.PL >= await LS.getItem("margin_Value_State")) {
+        notify("Comcy - Adding to Cart Profitable Card", `$$$ ${card_Info.title} $$$`)
+        await open_card_page_wait_added_to_cart(card_Info)
+      }
+    }
+    else {
+      add_not_found_on_ebay(card_Info)
     }
   }
 }
@@ -60,6 +91,8 @@ async function get_All_Cards_Info() {
 async function fetch_ebay_price(card_obj) {
   console.log("fetch_ebay_price()")
   console.log(card_obj.title)
+  ebay_secret_Auth = await LS.getItem("ebay_auth_token")
+  console.log(ebay_secret_Auth)
   return new Promise((res, rej) => {
     let description = card_obj.description.match(/.*(?= \-)/)[0]
     let title = card_obj.title.includes(" [") ? card_obj.title.match(/.*(?= \[)/)[0] : card_obj.title
@@ -75,36 +108,74 @@ async function fetch_ebay_price(card_obj) {
       if (this.readyState == 4 && this.status == 200) {
         console.log(ebay_Request.response)
         let json = JSON.parse(ebay_Request.response)
-        let itemSummaries = json.itemSummaries
-        let prices = []
-        for (let i = 0; i < itemSummaries.length; i++) {
-          prices.push(parseFloat(itemSummaries[i].price.value))//Adding every item price to array, for later average calculation
+        if (json.total == 0) {//if no items are found on EBAY 
+          card_obj.items_found_on_ebay = false
+          res(card_obj)
         }
-        const sum = prices.reduce((a, b) => a + b, 0);
-        const avg = (sum / prices.length) || 0;
-        console.log(`The average price for ${ebay_searh_keywords} is: ${avg}.`);
-        card_obj.ebay_Price = avg.toFixed(2);
-        res(card_obj);
+        else {
+          card_obj.items_found_on_ebay = true
+          let itemSummaries = json.itemSummaries
+          let prices = []
+          for (let i = 0; i < itemSummaries.length; i++) {
+            prices.push(parseFloat(itemSummaries[i].price.value))//Adding every item price to array, for later average calculation
+          }
+          small = prices[0]
+          for (let i = 1; i < prices.length; i++){
+            if (prices[i] < small) {
+              small = prices[i]
+            }
+          }
+          console.log(`The average price for ${ebay_searh_keywords} is: ${small}.`);
+          card_obj.ebay_Price = (small.toFixed(2) * 0.925) - (small.toFixed(2)*0.178) - 1.20
+          res(card_obj);
+        }
+      }
+      else {//
+        if (this.readyState == 4 && this.status != 200) {
+        console.log("Error API Token Expired")
+        chrome.runtime.sendMessage({message: "call_API_GetToken"})
+        notify("Cards Arbitrage - Ebay Access Token Expired", "Log-In Again to Obtain a New Token to Keep Scraping Ebay")
+        }
       }
     }
   })
 }
+
+// function get_new_API_Token() {
+//   var ebay_Login = new XMLHttpRequest();
+//   ebay_Login.open('POST', ebay_API_token_login);
+//   ebay_Login.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+//   ebay_Login.setRequestHeader('Authorization','Basic ' + app_credentials);
+//   params = {
+//     "grant_type": "client_credentials",
+//     "scope": "https://api.ebay.com/oauth/api_scope"
+//     }
+//   ebay_Login.send(JSON.stringify(params));
+//   ebay_Login.onreadystatechange = function() {//Call a function when the state changes.
+//     console.log(ebay_Login.response)}
+// }
 
 async function add_Ebay_Price_PL_in_Comc(card_obj) {
   return new Promise((res, rej) => {
     console.log(card_obj.PL)
     const ebay_Price_Div = document.createElement("div");
     ebay_Price_Div.innerText = "Ebay Price: " + card_obj.ebay_Price
+    ebay_Price_Div.className = "ebay-price"
     const ebay_PL = document.createElement("div");
-    ebay_PL.innerText = "Profit/Loss: " + card_obj.PL
-    if (card_obj.PL > 0) {
-      ebay_PL.className = "green-profit"
-    }
-    else {
-      ebay_PL.className = "red-loss"
-    }
+    ebay_PL.innerText = "Profit/Loss: " + card_obj.PL.toFixed(2)
+    ebay_PL.className = card_obj.PL > 0 ? "green-profit" : "red-loss"
     all_Cards_Containers[card_obj.index].querySelector(".carddata").appendChild(ebay_Price_Div)
     all_Cards_Containers[card_obj.index].querySelector(".carddata").appendChild(ebay_PL)
+    res()
+  })
+}
+
+async function add_not_found_on_ebay(card_obj) {
+  return new Promise((res, rej) => {
+    const not_found = document.createElement("div");
+    not_found.innerText = "Not Found On Ebay"
+    not_found.className = "Not-Found-On-Ebay"
+    all_Cards_Containers[card_obj.index].querySelector(".carddata").appendChild(not_found)
     res()
   })
 }
@@ -121,6 +192,9 @@ async function open_card_page_wait_added_to_cart(card_obj) {
             await LS.setItem("added_to_cart?", false)
             res()
           }
+          else {
+            console.log("Waiting that card is added to cart...")
+          }
         }, 1500);
       })
     }
@@ -129,9 +203,11 @@ async function open_card_page_wait_added_to_cart(card_obj) {
   })
 }
 
-
 async function add_to_cart() {
-  document.querySelector(".addtocart").click()
-  await LS.setItem("added_to_cart?", true)
-  window.close()
+  try {
+    document.querySelector(".addtocart").click()
+  }
+  catch {}
+  await LS.setItem("added_to_cart?", true).then((res) => window.close())
+
 }
