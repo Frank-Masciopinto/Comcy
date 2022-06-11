@@ -9,9 +9,8 @@ const LS = {
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
   console.log(request)
-  if(request.message == "open_side_panel"){
-      console.log(request.message);
-      toggle();
+  if(request.message == "New API Token Collected - Resume Searching!"){
+      get_All_Cards_Info()
       sendResponse({mess: "DONE"})
   }
 })
@@ -25,6 +24,7 @@ let app_credentials = btoa("Francesc-Comcy-PRD-3b4446ab8-52a76f32:PRD-b4446ab839
 
 //Test If Browsing a Collection - Then Collect all cards info & look for Profits on Ebay
 if (document.getElementById("cardexplorer")) {
+  notify("Comcy - Started Comparing Prices on Ebay", 'Hold on, Im looking for Profits!')
   get_All_Cards_Info()
 }
 else if (window.name == "add_to_cart") {
@@ -36,31 +36,12 @@ else if (window.name == "get_token") {
   update_token()
 }
 
-async function update_token() {
-  console.log("update_token()")
-  var url_string = window.location.href
-  var url = new URL(url_string);
-  var is_auth_success = url.searchParams.get("isAuthSuccessful");
-  if (is_auth_success == "true") {
-    alert(url.searchParams.get("code"))
-    var new_token = url.searchParams.get("code");
-    notify("Cards Arbitrage - Got a New Token", "You can resume your work now.")
-    await LS.setItem("ebay_auth_token", new_token)
-    window.close()
-  }
-  else {
-    alert("is_auth_success= FALSE")
-    window.close()
-  }
-}
-
 function notify(title, description) {
   chrome.runtime.sendMessage({message: "create_notification", title: title, description: description})
 }
 
 async function get_All_Cards_Info() {
   console.log("get_All_Cards_Info()")
-  notify("Comcy - Started Comparing Prices on Ebay", 'Hold on, Im looking for Profits!')
   //Get All Cards
   all_Cards_Containers = document.querySelectorAll(".cardInfoWrapper")
   //Collecting All Cards Info, fetch Ebay price, display it, the if profit margin match or above user chosen
@@ -92,12 +73,11 @@ async function fetch_ebay_price(card_obj) {
   console.log("fetch_ebay_price()")
   console.log(card_obj.title)
   ebay_secret_Auth = await LS.getItem("ebay_auth_token")
-  console.log(ebay_secret_Auth)
   return new Promise((res, rej) => {
     let description = card_obj.description.match(/.*(?= \-)/)[0]
     let title = card_obj.title.includes(" [") ? card_obj.title.match(/.*(?= \[)/)[0] : card_obj.title
     let ebay_searh_keywords = title + " " + description
-    var ebay_API_Search_Item_Price = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${ebay_searh_keywords}&limit=3`;
+    var ebay_API_Search_Item_Price = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${ebay_searh_keywords}&limit=3&filter=buyingOptions%3A%7BFIXED_PRICE%7D`;
     var ebay_Request = new XMLHttpRequest();
     ebay_Request.open('GET', ebay_API_Search_Item_Price);
     ebay_Request.setRequestHeader('Accept','application/json');
@@ -134,7 +114,6 @@ async function fetch_ebay_price(card_obj) {
         if (this.readyState == 4 && this.status != 200) {
         console.log("Error API Token Expired")
         chrome.runtime.sendMessage({message: "call_API_GetToken"})
-        notify("Cards Arbitrage - Ebay Access Token Expired", "Log-In Again to Obtain a New Token to Keep Scraping Ebay")
         }
       }
     }
@@ -158,13 +137,13 @@ async function fetch_ebay_price(card_obj) {
 async function add_Ebay_Price_PL_in_Comc(card_obj) {
   return new Promise((res, rej) => {
     console.log(card_obj.PL)
-    const ebay_Price_Div = document.createElement("div");
-    ebay_Price_Div.innerText = "Ebay Price: " + card_obj.ebay_Price
-    ebay_Price_Div.className = "ebay-price"
+    // const ebay_Price_Div = document.createElement("div");
+    // ebay_Price_Div.innerText = "Ebay Price: " + card_obj.ebay_Price
+    // ebay_Price_Div.className = "ebay-price"
     const ebay_PL = document.createElement("div");
     ebay_PL.innerText = "Profit/Loss: " + card_obj.PL.toFixed(2)
     ebay_PL.className = card_obj.PL > 0 ? "green-profit" : "red-loss"
-    all_Cards_Containers[card_obj.index].querySelector(".carddata").appendChild(ebay_Price_Div)
+    //all_Cards_Containers[card_obj.index].querySelector(".carddata").appendChild(ebay_Price_Div)
     all_Cards_Containers[card_obj.index].querySelector(".carddata").appendChild(ebay_PL)
     res()
   })
@@ -187,10 +166,11 @@ async function open_card_page_wait_added_to_cart(card_obj) {
     window.open(card_obj.href, "add_to_cart", "height=100,width=200", "_blank");
     async function wait_card_is_added_to_cart() {
       return new Promise((res, rej) => {
-        setInterval(async () => {
+        let check = setInterval(async () => {
           if (await LS.getItem("added_to_cart?") == true) {
             await LS.setItem("added_to_cart?", false)
-            res()
+              clearInterval(check)
+              res()
           }
           else {
             console.log("Waiting that card is added to cart...")
@@ -206,8 +186,15 @@ async function open_card_page_wait_added_to_cart(card_obj) {
 async function add_to_cart() {
   try {
     document.querySelector(".addtocart").click()
+    setTimeout(async () => {
+      await LS.setItem("added_to_cart?", true).then((res) => window.close())
+    }, 200);
+    console.log("INSIDE CLICKED")
   }
-  catch {}
-  await LS.setItem("added_to_cart?", true).then((res) => window.close())
-
+  catch {
+    console.log("INSIDE CATCH")
+    setTimeout(async () => {
+      await LS.setItem("added_to_cart?", true).then((res) => window.close())
+    }, 200);
+  }
 }

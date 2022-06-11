@@ -59,6 +59,7 @@ function call_API_GetToken() {
 .then(async (json) => {
     console.log(json)
     await LS.setItem("ebay_auth_token", json.access_token)
+    chrome.runtime.sendMessage({message: "New API Token Collected - Resume Searching!"})
 })
 
 .catch(function (err) {
