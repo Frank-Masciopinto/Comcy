@@ -1,6 +1,9 @@
 html {
   height: fit-content;
 }
+label {
+  font-size: 1.5rem;
+}
 body { 
   height: inherit;
   width: 300px;
@@ -29,6 +32,13 @@ div.right {
   width: 46%;
   margin-right: 50px;
 }
+div.price-right {
+  float: right;
+  text-align: -webkit-right;
+  vertical-align: middle;
+  width: 35%;
+  margin-right: 10px;
+}
 div.left {
   float: left;
   text-align: -webkit-left;
@@ -37,12 +47,30 @@ div.left {
   margin-left: 21px;
 }
 
-#profit-margin-input {
+input {
   color: gold;
 }
-input#profit-margin-input:focus {
+input:focus {
   border-color: gold !important;
 }
 .logo {
   width: 50%;
+}
+
+.custom_button {
+  background-color: #c89626;
+  border: 0.1rem solid #282828;
+  margin-bottom: 3px;
+  line-height: 1rem;
+  margin-top: 9px;
+  height: 31px;
+  margin-left: 23%;
+  padding: 0px 1rem;
+  width: -webkit-fill-available;
+  margin: inherit;
+}
+
+.custom_button:hover {
+  background-color: #282828;
+  border-color: #ffd700;
 }

@@ -21,13 +21,43 @@ let ebay_secret_Auth;
 console.log("Window_Name = " + window.name)
 let ebay_API_token_login = "https://api.ebay.com/identity/v1/oauth2/token"
 let app_credentials = btoa("Francesc-Comcy-PRD-3b4446ab8-52a76f32:PRD-b4446ab8399b-f991-4154-ae42-1e34")
-
-//Test If Browsing a Collection - Then Collect all cards info & look for Profits on Ebay
-if (document.getElementById("cardexplorer")) {
-  notify("Comcy - Started Comparing Prices on Ebay", 'Hold on, Im looking for Profits!')
-  get_All_Cards_Info()
+let FILTER_buy_now = ",fb"
+let FILTER_highest_percent_off =",sp"
+let CATEGORIES_LINKS = {
+  SPORT: [
+      "https://www.comc.com/Cards/Baseball",
+      "https://www.comc.com/Cards/Basketball",
+      "https://www.comc.com/Cards/Football",
+      "https://www.comc.com/Cards/Hockey",
+      "https://www.comc.com/Cards/Racing",
+      "https://www.comc.com/Cards/Soccer",
+      "https://www.comc.com/Cards/Golf",
+      "https://www.comc.com/Cards/Tennis",
+      "https://www.comc.com/Cards/MMA",
+      "https://www.comc.com/Cards/Boxing",
+      "https://www.comc.com/Cards/Wrestling",
+      "https://www.comc.com/Cards/MultiSport"
+  ],
+  TRADING: [
+      "https://www.comc.com/Cards/Marvel",
+      "https://www.comc.com/Cards/Non-Sport",
+      "https://www.comc.com/Cards/Non-Sports,=Star+Wars",
+      "https://www.comc.com/Cards/Non-Sports,=Star+Trek",
+      "https://www.comc.com/Cards/Non-Sports,=Garbage+Pail+Kids,sl",
+      "https://www.comc.com/Cards/Poker"
+  ],
+  GAMING: [
+      "https://www.comc.com/Cards/Magic",
+      "https://www.comc.com/Cards/Pokemon",
+      "https://www.comc.com/Cards/YuGiOh"
+  ]
 }
-else if (window.name == "add_to_cart") {
+//Test If Browsing a Collection - Then Collect all cards info & look for Profits on Ebay
+// if (document.getElementById("cardexplorer")) {
+//   notify("Comcy - Started Comparing Prices on Ebay", 'Hold on, Im looking for Profits!')
+//   get_All_Cards_Info()
+// }
+if (window.name == "add_to_cart") {
   console.log("Adding to Cart...")
   //Add to cart then close window
   add_to_cart()
@@ -35,9 +65,52 @@ else if (window.name == "add_to_cart") {
 else if (window.name == "get_token") {
   update_token()
 }
+else if (window.name == "start_automation") {
+  start_automation()
+}
+else if (window.name == "search_for_profitable_cards") {
+    start_category_automation()
+}
+
+async function start_category_automation() {
+  if (!document.querySelector(".noResults")) {//if there is results start automation
+    await automation_process()
+    document.querySelector(".pgnext").click()//click next page
+  }
+  else {
+    await LS.setItem("search_ended", true)//of no results, go to next category
+    window.close()
+  }
+}
 
 function notify(title, description) {
   chrome.runtime.sendMessage({message: "create_notification", title: title, description: description})
+}
+
+async function start_automation() {
+  for (let i=0; i<CATEGORIES_LINKS.SPORT.length; i++) {
+    window.open(CATEGORIES_LINKS.SPORT[i] + FILTER_buy_now + FILTER_highest_percent_off, "search_for_profitable_cards")
+    let category = CATEGORIES_LINKS.SPORT[i].match(/(?<=https:\/\/www\.comc\.com\/Cards\/).*/)[0]
+    notify("Cards Arbitrage - Hold on, I'm searching for Profits", `*** Category ${category} ***`)
+    await LS.setItem("search_ended", false)
+    await wait_for_search_ends()
+  }
+}
+
+async function wait_for_search_ends() {
+  console.log("wait_for_search_ends")
+  return new Promise((res, rej) => {
+    let condition = setInterval(async () => {
+      if (await LS.getItem("search_ended") == true) {
+        clearInterval(condition)
+        await LS.setItem("search_ended", false)
+        res()
+      }
+      else {
+        console.log("Search not ended yet...")
+      }
+    }, 4000);
+  })
 }
 
 async function get_All_Cards_Info() {
@@ -59,7 +132,7 @@ async function get_All_Cards_Info() {
       await add_Ebay_Price_PL_in_Comc(card_Info)
       //If Ebay Price is above the margin value set by user -> open product page and add to cart
       if (card_Info.PL >= await LS.getItem("margin_Value_State")) {
-        notify("Comcy - Adding to Cart Profitable Card", `$$$ ${card_Info.title} $$$`)
+        notify("Cards Arbitrage - Adding to Cart Profitable Card", `$$$ ${card_Info.title} $$$`)
         await open_card_page_wait_added_to_cart(card_Info)
       }
     }
@@ -67,6 +140,46 @@ async function get_All_Cards_Info() {
       add_not_found_on_ebay(card_Info)
     }
   }
+}
+
+async function automation_process() {
+  return new Promise(async (res, rej) => {
+    console.log("automation_process()")
+    all_Cards_Containers = document.querySelectorAll(".cardInfoWrapper")
+    let min_price = await LS.getItem("min_price")
+    let max_price = await LS.getItem("max_price")
+    //Collecting All Cards Info, fetch Ebay price, display it, the if profit margin match or above user chosen
+    for (let i = 0; i < all_Cards_Containers.length; i++) {
+      card_price = parseFloat(all_Cards_Containers[i].querySelector(".listprice").querySelector("a").innerText.replace("$", ""))
+      if (card_price >= min_price && card_price <= max_price) { //if cards match buy price, compare it
+        let card_Info = {}
+        card_Info.index = i
+        card_Info.title = all_Cards_Containers[i].querySelector(".title").innerText
+        card_Info.description = all_Cards_Containers[i].querySelector(".description").innerText
+        card_Info.list_Price = all_Cards_Containers[i].querySelector(".listprice").querySelector("a").innerText
+        card_Info.href = all_Cards_Containers[i].querySelector("a").href
+        all_Cards_Array.push(card_Info)
+        card_Info = await fetch_ebay_price(card_Info)
+        if (card_Info.items_found_on_ebay) {
+          card_Info.PL = card_Info.ebay_Price - parseFloat(card_Info.list_Price.replace("$", ""))
+          await add_Ebay_Price_PL_in_Comc(card_Info)
+          //If Ebay Price is above the margin value set by user -> open product page and add to cart
+          if (card_Info.PL >= await LS.getItem("margin_Value_State")) {
+            notify("Cards Arbitrage - Adding to Cart Profitable Card", `$$$ ${card_Info.title} $$$`)
+            await open_card_page_wait_added_to_cart(card_Info)
+          }
+        }
+        else {
+          add_not_found_on_ebay(card_Info)
+        }
+      }
+      else {//if does not match price target, skip
+        add_not_price_target({index: i})
+      }
+      console.log("All Cards Checked on this page.")
+      res()
+      }
+  })
 }
 
 async function fetch_ebay_price(card_obj) {
@@ -120,20 +233,6 @@ async function fetch_ebay_price(card_obj) {
   })
 }
 
-// function get_new_API_Token() {
-//   var ebay_Login = new XMLHttpRequest();
-//   ebay_Login.open('POST', ebay_API_token_login);
-//   ebay_Login.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-//   ebay_Login.setRequestHeader('Authorization','Basic ' + app_credentials);
-//   params = {
-//     "grant_type": "client_credentials",
-//     "scope": "https://api.ebay.com/oauth/api_scope"
-//     }
-//   ebay_Login.send(JSON.stringify(params));
-//   ebay_Login.onreadystatechange = function() {//Call a function when the state changes.
-//     console.log(ebay_Login.response)}
-// }
-
 async function add_Ebay_Price_PL_in_Comc(card_obj) {
   return new Promise((res, rej) => {
     console.log(card_obj.PL)
@@ -153,6 +252,15 @@ async function add_not_found_on_ebay(card_obj) {
   return new Promise((res, rej) => {
     const not_found = document.createElement("div");
     not_found.innerText = "Not Found On Ebay"
+    not_found.className = "Not-Found-On-Ebay"
+    all_Cards_Containers[card_obj.index].querySelector(".carddata").appendChild(not_found)
+    res()
+  })
+}
+async function add_not_price_target(card_obj) {
+  return new Promise((res, rej) => {
+    const not_found = document.createElement("div");
+    not_found.innerText = "Not in price target"
     not_found.className = "Not-Found-On-Ebay"
     all_Cards_Containers[card_obj.index].querySelector(".carddata").appendChild(not_found)
     res()

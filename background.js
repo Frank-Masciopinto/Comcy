@@ -6,7 +6,37 @@ const LS = {
   };
 let ebay_API_token_login = "https://api.ebay.com/identity/v1/oauth2/token"
 let app_credentials = btoa("Francesc-Comcy-PRD-3b4446ab8-52a76f32:PRD-b4446ab8399b-f991-4154-ae42-1e34")
-
+let FILTER_buy_now = ",fb"
+let FILTER_lowest_price_first =",sl"
+let CATEGORIES_LINKS = {
+    SPORT: [
+        "https://www.comc.com/Cards/Baseball",
+        "https://www.comc.com/Cards/Basketball",
+        "https://www.comc.com/Cards/Football",
+        "https://www.comc.com/Cards/Hockey",
+        "https://www.comc.com/Cards/Racing",
+        "https://www.comc.com/Cards/Soccer",
+        "https://www.comc.com/Cards/Golf",
+        "https://www.comc.com/Cards/Tennis",
+        "https://www.comc.com/Cards/MMA",
+        "https://www.comc.com/Cards/Boxing",
+        "https://www.comc.com/Cards/Wrestling",
+        "https://www.comc.com/Cards/MultiSport"
+    ],
+    TRADING: [
+        "https://www.comc.com/Cards/Marvel",
+        "https://www.comc.com/Cards/Non-Sport",
+        "https://www.comc.com/Cards/Non-Sports,=Star+Wars",
+        "https://www.comc.com/Cards/Non-Sports,=Star+Trek",
+        "https://www.comc.com/Cards/Non-Sports,=Garbage+Pail+Kids,sl",
+        "https://www.comc.com/Cards/Poker"
+    ],
+    GAMING: [
+        "https://www.comc.com/Cards/Magic",
+        "https://www.comc.com/Cards/Pokemon",
+        "https://www.comc.com/Cards/YuGiOh"
+    ]
+}
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     console.log(request)
@@ -21,11 +51,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         sendResponse({mess: "DONE"})
     }
     else if (request.message == "call_API_GetToken") {
-        call_API_GetToken()
+        call_API_GetToken(sender.tab.id)
+    }
+    else if (request.message == "start-automation") {
+        //start_automation()
     }
 })
 
-function call_API_GetToken() {
+function call_API_GetToken(tabId) {
     console.log("**Getting Token, Calling API***")
     var details = {
         "grant_type": "client_credentials",
@@ -59,7 +92,7 @@ function call_API_GetToken() {
 .then(async (json) => {
     console.log(json)
     await LS.setItem("ebay_auth_token", json.access_token)
-    chrome.runtime.sendMessage({message: "New API Token Collected - Resume Searching!"})
+    chrome.tabs.sendMessage(tabId, {message: "New API Token Collected - Resume Searching!"})
 })
 
 .catch(function (err) {
@@ -71,5 +104,5 @@ function call_API_GetToken() {
 chrome.runtime.onInstalled.addListener(async (details) => {
     if(details.reason == "install"){
         console.log("ONINSsTALL STORAGE SET UP")
-
+        await LS.setItem("search_ended", false)
 }});
