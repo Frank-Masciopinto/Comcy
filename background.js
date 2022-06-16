@@ -100,7 +100,6 @@ function call_API_GetToken(tabId) {
 }
 )}
 
-
 chrome.runtime.onInstalled.addListener(async (details) => {
     if(details.reason == "install"){
         console.log("ONINSsTALL STORAGE SET UP")
