@@ -176,9 +176,39 @@ async function automation_process() {
       else {//if does not match price target, skip
         add_not_price_target({index: i})
       }
-      console.log("All Cards Checked on this page.")
-      res()
+      if (i == all_Cards_Containers.length -1) {
+        console.log("All Cards Checked on this page.")
+        res()
       }
+      }
+  })
+}
+
+
+function buildRegEx(str, keywords){
+  return new RegExp("(?=.*?\\b" + 
+    keywords
+      .split(" ")
+      .join(")(?=.*?\\b") +                     
+    ").*", 
+    "i"
+  );
+}
+
+function test(str, keywords, expected){
+  var result = buildRegEx(str, keywords).test(str) === expected
+  console.log(result ? "Passed" : "Failed");
+  return result
+}
+
+async function set_keywords(card_obj) {
+  return new Promise((res, rej) => {
+    let description = card_obj.description
+    let title = card_obj.title.includes(" [") ? card_obj.title.match(/.*(?= \[)/)[0] : card_obj.title
+    setTimeout(() => {
+      console.log("Title Extracted: " + title)
+      res(encodeURIComponent(description + " " + title))
+    }, 100);
   })
 }
 
@@ -186,11 +216,14 @@ async function fetch_ebay_price(card_obj) {
   console.log("fetch_ebay_price()")
   console.log(card_obj.title)
   ebay_secret_Auth = await LS.getItem("ebay_auth_token")
-  return new Promise((res, rej) => {
-    let description = card_obj.description.match(/.*(?= \-)/)[0]
+  return new Promise(async (res, rej) => {
+    //let description = card_obj.description.match(/.*(?= \-)/)[0]
+    let ebay_searh_keywords = await set_keywords(card_obj)
+    let year = card_obj.description.match(/^\d{4}/)
+    let card_no = card_obj.description.match(/#\w+\d+$/)
     let title = card_obj.title.includes(" [") ? card_obj.title.match(/.*(?= \[)/)[0] : card_obj.title
-    let ebay_searh_keywords = title + " " + description
-    var ebay_API_Search_Item_Price = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${ebay_searh_keywords}&limit=3&filter=buyingOptions%3A%7BFIXED_PRICE%7D`;
+    console.log(ebay_searh_keywords)
+    var ebay_API_Search_Item_Price = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${ebay_searh_keywords}&limit=15&filter=buyingOptions%3A%7BFIXED_PRICE%7D`;
     var ebay_Request = new XMLHttpRequest();
     ebay_Request.open('GET', ebay_API_Search_Item_Price);
     ebay_Request.setRequestHeader('Accept','application/json');
@@ -199,7 +232,7 @@ async function fetch_ebay_price(card_obj) {
     ebay_Request.send();
     ebay_Request.onreadystatechange = function() {//Call a function when the state changes.
       if (this.readyState == 4 && this.status == 200) {
-        console.log(ebay_Request.response)
+        console.log(ebay_Request.response.href)
         let json = JSON.parse(ebay_Request.response)
         if (json.total == 0) {//if no items are found on EBAY 
           card_obj.items_found_on_ebay = false
@@ -210,17 +243,46 @@ async function fetch_ebay_price(card_obj) {
           let itemSummaries = json.itemSummaries
           let prices = []
           for (let i = 0; i < itemSummaries.length; i++) {
-            prices.push(parseFloat(itemSummaries[i].price.value))//Adding every item price to array, for later average calculation
-          }
-          small = prices[0]
-          for (let i = 1; i < prices.length; i++){
-            if (prices[i] < small) {
-              small = prices[i]
+            console.log(title)
+            console.log(itemSummaries[i].title)
+            if (itemSummaries[i].title.includes(title)) {
+              if (year) {
+                if (itemSummaries[i].title.includes(year[0])) {
+                  if (card_no) {
+                    if (itemSummaries[i].title.includes(card_no[0])) {
+                      console.log("Year & Card Number Found")
+                      prices.push(parseFloat(itemSummaries[i].price.value))//Adding every item price to array, for later average calculation
+                    }
+                  }
+                  else {
+                    console.log("Only Year Found, skipping")
+                    //prices.push(parseFloat(itemSummaries[i].price.value))//Adding every item price to array, for later average calculation
+                  }
+                }
+              }
+              else {
+                console.log("nor Year not card no found on comc card, skipping")
+                //prices.push(parseFloat(itemSummaries[i].price.value))//Adding every item price to array, for later average calculation
+              }
             }
           }
-          console.log(`The average price for ${ebay_searh_keywords} is: ${small}.`);
-          card_obj.ebay_Price = (small.toFixed(2) * 0.925) - (small.toFixed(2)*0.178) - 1.20
-          res(card_obj);
+          setTimeout(() => {
+            if (prices.length != 0) {
+              let small = prices[0]
+              for (let i = 1; i < prices.length; i++){
+                if (prices[i] < small) {
+                  small = prices[i]
+                }
+              }
+              console.log(`The cheapest price on Ebay for ${title} is: ${small}.`);
+              card_obj.ebay_Price = (small.toFixed(2) * 0.925) - (small.toFixed(2)*0.178) - 1.20
+              res(card_obj);
+            }
+            else {
+              card_obj.items_found_on_ebay = false
+              res(card_obj)
+            }
+          }, 100);
         }
       }
       else {//
