@@ -103,5 +103,12 @@ function call_API_GetToken(tabId) {
 chrome.runtime.onInstalled.addListener(async (details) => {
     if(details.reason == "install"){
         console.log("ONINSsTALL STORAGE SET UP")
+        let today_Date = new Date()
+        let daily_extracted_pages = {
+            DATES: [],
+            PAGES: []
+          }
+        await LS.setItem("Pages_scraped_daily_DB", today_Date.toString());
         await LS.setItem("search_ended", false)
+        await LS.setItem("Pages_scraped_daily_DB", daily_extracted_pages)
 }});

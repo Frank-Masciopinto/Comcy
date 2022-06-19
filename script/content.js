@@ -52,6 +52,12 @@ let CATEGORIES_LINKS = {
       "https://www.comc.com/Cards/YuGiOh"
   ]
 }
+
+let daily_extracted_pages = {
+  DATES: [],
+  PAGES: []
+}
+
 //Test If Browsing a Collection - Then Collect all cards info & look for Profits on Ebay
 // if (document.getElementById("cardexplorer")) {
 //   notify("Comcy - Started Comparing Prices on Ebay", 'Hold on, Im looking for Profits!')
@@ -88,13 +94,60 @@ function notify(title, description) {
 }
 
 async function start_automation() {
+  await remove_pages_extracted_24hrs()
+  daily_extracted_pages = await LS.getItem("Pages_scraped_daily_DB")
+
   for (let i=0; i<CATEGORIES_LINKS.SPORT.length; i++) {
+    daily_extracted_pages.PAGES.push(CATEGORIES_LINKS.SPORT[i])
+    daily_extracted_pages.DATES.push(new Date)
+    await LS.setItem("Pages_scraped_daily_DB", daily_extracted_pages)
     window.open(CATEGORIES_LINKS.SPORT[i] + FILTER_buy_now + FILTER_highest_percent_off, "search_for_profitable_cards")
     let category = CATEGORIES_LINKS.SPORT[i].match(/(?<=https:\/\/www\.comc\.com\/Cards\/).*/)[0]
     notify("Cards Arbitrage - Hold on, I'm searching for Profits", `*** Category ${category} ***`)
     await LS.setItem("search_ended", false)
     await wait_for_search_ends()
   }
+}
+function check_NaN(val) {
+  if (parseInt(val) != parseInt(val)) {
+      return 0;
+  }
+  return parseInt(val);
+}
+async function remove_pages_extracted_24hrs() {
+  console.log("remove_pages_extracted_24hrs()")
+  let oneDay = 86400000;
+  let today_Date = new Date();
+  let filtered_pages;
+  return new Promise(async (res, rej) => {
+    daily_extracted_pages = await LS.getItem("Pages_scraped_daily_DB")
+    filtered_pages = daily_extracted_pages
+    if (daily_extracted_pages.PAGES.length == 0) {
+      res()
+    }
+    for (let i = 0; i < daily_extracted_pages.PAGES.length; i++) {
+      let date_of_comparison = new Date(daily_extracted_pages.DATES[i]);
+      console.log("Checking if 1 day passed");
+      console.log(filtered_pages.PAGES[i])
+      let days_Passed_Since_last_extraction = check_NaN(Math.round(Math.abs((today_Date - date_of_comparison) / oneDay)));
+      console.log(days_Passed_Since_last_extraction);
+      //If 1 days passed since last check, remove category from state
+      if (days_Passed_Since_last_extraction > 0) {
+        console.log("One day have passed")
+        filtered_pages.PAGES = filtered_pages.PAGES.filter(e => e !== filtered_pages.PAGES[i])
+        filtered_pages.DATES = filtered_pages.DATES.filter(e => e !== filtered_pages.DATES[i])
+      }
+      else {//if less than 24 hrs passed, remove that category from scraping sequence
+        console.log("Less than 24hrs passed, removing category from scraping list")
+        CATEGORIES_LINKS.SPORT = CATEGORIES_LINKS.SPORT.filter(e => e !== daily_extracted_pages.PAGES[i])
+        CATEGORIES_LINKS.GAMING = CATEGORIES_LINKS.GAMING.filter(e => e !== daily_extracted_pages.PAGES[i])
+        CATEGORIES_LINKS.TRADING = CATEGORIES_LINKS.TRADING.filter(e => e !== daily_extracted_pages.PAGES[i])
+      }
+    }
+    await LS.setItem("Pages_scraped_daily_DB", filtered_pages)
+    console.log("Removed 24hrs Pages, returning")
+    res()
+  })
 }
 
 async function wait_for_search_ends() {
@@ -316,7 +369,7 @@ async function fetch_ebay_price(card_obj) {
     //let description = card_obj.description.match(/.*(?= \-)/)[0]
     let ebay_searh_keywords = await set_keywords(card_obj)
     let year = card_obj.description.match(/^\d{4}/)
-    let card_no = card_obj.description.match(/#\w+\d+$/)
+    let card_no = card_obj.description.match(/#\w+\-?\d+$/)
     let title = card_obj.title.includes(" [") ? card_obj.title.match(/.*(?= \[)/)[0] : card_obj.title
     console.log(ebay_searh_keywords)
     var ebay_API_Search_Item_Price = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${ebay_searh_keywords}&limit=15&sort=price`;
@@ -458,32 +511,4 @@ async function add_to_cart() {
       await LS.setItem("added_to_cart?", true).then((res) => window.close())
     }, 200);
   }
-}
-
-function save(blob, card_obj) {
-  console.log("save")
-  const reader = new FileReader();
-  reader.onload = async () => {
-  console.log(reader.result)
-  search_ebay_by_image(reader.result.replace("data:image/png;base64,", ""), card_obj)
-  };
-  reader.readAsDataURL(blob);
-}
-
-function capture(image_url) {
-console.log("capture()")
-return new Promise((resolve, reject) => {
-  fetch(image_url).then(r => r.blob()).then(async blob => {
-
-      const img = await createImageBitmap(blob);
-      resolve(img)
-  });
-  });
-}
-
-
-async function search_by_image(card_obj) {
-capture(request).then(a => save(a, card_obj)).catch(e => {
-  console.log(e.message || e);
-  });
 }
